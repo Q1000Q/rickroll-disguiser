@@ -1,9 +1,32 @@
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import Dropzone from 'react-dropzone'
+import { FFmpeg } from "@ffmpeg/ffmpeg";
+import { toBlobURL } from '@ffmpeg/util';
+import processReplacement from "./processReplacement";
 
 const ReplaceFirstFrame = () => {
     const [videoFile, setVideoFile] = useState<File | null>(null)
     const [imageFile, setImageFile] = useState<File | null>(null)
+    const [processedUrl, setProcessedUrl] = useState<string>('');
+    const [ffmpegLoaded, setFfmpegLoaded] = useState<boolean>(false);
+
+    const ffmpegRef = useRef(new FFmpeg());
+    useEffect(() => {
+        const ffmpeg = ffmpegRef.current;
+        const load = async () => {
+            if (!ffmpeg.loaded) {
+                const baseURL = 'https://unpkg.com/@ffmpeg/core-mt@0.12.6/dist/esm'
+                await ffmpeg.load({
+                    coreURL: await toBlobURL(`${baseURL}/ffmpeg-core.js`, 'text/javascript'),
+                    wasmURL: await toBlobURL(`${baseURL}/ffmpeg-core.wasm`, 'application/wasm'),
+                    workerURL: await toBlobURL(`${baseURL}/ffmpeg-core.worker.js`, 'text/javascript'),
+                });
+                setFfmpegLoaded(true);
+                console.log("FFmpeg loaded");
+            }
+        }
+        load();
+    }, [])
 
     const loadFileFromAssets = async (path: string, filename: string): Promise<File> => {
         const response = await fetch(path)
@@ -20,8 +43,19 @@ const ReplaceFirstFrame = () => {
     const videoUrl = videoFile ? URL.createObjectURL(videoFile) + "#t=1" : "";
     const imageUrl = imageFile ? URL.createObjectURL(imageFile) + "#t=1" : "";
 
+    const process = async () => {
+        if (videoFile && imageFile) {
+            try {
+                const url = await processReplacement(ffmpegRef.current, processedUrl, videoFile, imageFile) ?? '';
+                setProcessedUrl(url);
+            } catch (error) {
+                console.error("Error processing:", error);
+            }
+        }
+    }
+
     return (
-        <div>
+        <div className="flex flex-col items-center">
             <div className="flex gap-12">
                 <Dropzone onDrop={acceptedFiles => setVideoFile(acceptedFiles[0])}>
                     {({getRootProps, getInputProps, isDragActive, }) => (
@@ -51,7 +85,12 @@ const ReplaceFirstFrame = () => {
                     )}
                 </Dropzone>
             </div>
-            <button className="px-24 h-12 w-full mt-8">Process</button>
+            <button className="px-24 h-12 w-full mt-8" onClick={process} disabled={!ffmpegLoaded || !videoFile || !imageFile}>
+                {ffmpegLoaded ? 'Process' : 'Loading FFmpeg...'}
+            </button>
+            {processedUrl ? (
+                <video src={processedUrl ?? ""} className="mt-6 mx-auto my-4" controls></video>
+            ): ""}
         </div>
     )
 }
