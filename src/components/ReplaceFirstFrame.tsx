@@ -1,14 +1,17 @@
-import { useState, useEffect, useRef } from "react"
+import { useState, useEffect, useRef, useMemo } from "react"
 import Dropzone from 'react-dropzone'
 import { FFmpeg } from "@ffmpeg/ffmpeg";
 import { toBlobURL } from '@ffmpeg/util';
-import processReplacement from "./processReplacement";
+import processReplacement from "../utils/processReplacement";
+import type { Options } from '../utils/interfaces';
+import Settings from "./Settings";
 
 const ReplaceFirstFrame = () => {
     const [videoFile, setVideoFile] = useState<File | null>(null)
     const [imageFile, setImageFile] = useState<File | null>(null)
     const [processedUrl, setProcessedUrl] = useState<string>('');
     const [ffmpegLoaded, setFfmpegLoaded] = useState<boolean>(false);
+    const [options, setOptions] = useState<Options>({ scaleTo: 1, framerate: 30, videoLenght: 10});
 
     const ffmpegRef = useRef(new FFmpeg());
     useEffect(() => {
@@ -40,13 +43,13 @@ const ReplaceFirstFrame = () => {
             .catch(console.error)
     }, [])
 
-    const videoUrl = videoFile ? URL.createObjectURL(videoFile) + "#t=1" : "";
-    const imageUrl = imageFile ? URL.createObjectURL(imageFile) + "#t=1" : "";
+    const videoUrl = useMemo(() => videoFile ? URL.createObjectURL(videoFile) + "#t=1" : "", [videoFile]);
+    const imageUrl = useMemo(() => imageFile ? URL.createObjectURL(imageFile) + "#t=1" : "", [imageFile]);
 
     const process = async () => {
         if (videoFile && imageFile) {
             try {
-                const url = await processReplacement(ffmpegRef.current, processedUrl, videoFile, imageFile) ?? '';
+                const url = await processReplacement(ffmpegRef.current, videoFile, imageFile, options, processedUrl) ?? '';
                 setProcessedUrl(url);
             } catch (error) {
                 console.error("Error processing:", error);
@@ -88,6 +91,7 @@ const ReplaceFirstFrame = () => {
             <button className="px-24 h-12 w-full mt-8" onClick={process} disabled={!ffmpegLoaded || !videoFile || !imageFile}>
                 {ffmpegLoaded ? 'Process' : 'Loading FFmpeg...'}
             </button>
+            <Settings options={options} setOptions={setOptions}></Settings>
             {processedUrl ? (
                 <video src={processedUrl ?? ""} className="mt-6 mx-auto my-4" controls></video>
             ): ""}

@@ -1,5 +1,5 @@
 import './App.css'
-import Introduction from './components/introduction'
+import Introduction from './components/Introduction'
 import ReplaceFirstFrame from './components/ReplaceFirstFrame'
 
 const App = () => {
