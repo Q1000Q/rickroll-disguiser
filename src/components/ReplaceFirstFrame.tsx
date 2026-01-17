@@ -24,15 +24,19 @@ const ReplaceFirstFrame = () => {
     useEffect(() => {
         const ffmpeg = ffmpegRef.current;
         const load = async () => {
-            if (!ffmpeg.loaded) {
-                const baseURL = 'https://unpkg.com/@ffmpeg/core-mt@0.12.6/dist/esm'
-                await ffmpeg.load({
-                    coreURL: await toBlobURL(`${baseURL}/ffmpeg-core.js`, 'text/javascript'),
-                    wasmURL: await toBlobURL(`${baseURL}/ffmpeg-core.wasm`, 'application/wasm'),
-                    workerURL: await toBlobURL(`${baseURL}/ffmpeg-core.worker.js`, 'text/javascript'),
-                });
-                setFfmpegLoaded(true);
-                console.log("FFmpeg loaded");
+            try {
+                if (!ffmpeg.loaded) {
+                    const baseURL = 'https://unpkg.com/@ffmpeg/core-mt@0.12.6/dist/esm'
+                    await ffmpeg.load({
+                        coreURL: await toBlobURL(`${baseURL}/ffmpeg-core.js`, 'text/javascript'),
+                        wasmURL: await toBlobURL(`${baseURL}/ffmpeg-core.wasm`, 'application/wasm'),
+                        workerURL: await toBlobURL(`${baseURL}/ffmpeg-core.worker.js`, 'text/javascript'),
+                    });
+                    setFfmpegLoaded(true);
+                    console.log("FFmpeg loaded");
+                }
+            } catch (error) {
+                console.error("FFmpeg loading failed:", error);
             }
         }
         load();
