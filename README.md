@@ -44,7 +44,7 @@ Visit `http://localhost:5173` in your browser to use the app.
 4. Click "Process" and wait for the magic to happen
 5. Download your disguised video!
 
-## 🛠️ Tech Stack
+## Tech Stack
 
 - **React** - UI framework
 - **TypeScript** - Type safety
