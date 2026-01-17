@@ -1,75 +1,66 @@
-# React + TypeScript + Vite
+# Rickroll Disguiser
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A browser-based video editor that replaces the first frame of any video with a custom image. Perfect for creating convincing rickroll disguises and other pranks!
 
-Currently, two official plugins are available:
+## Features
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+- **Client-side processing** - Everything runs in your browser using FFmpeg.wasm
+- **Custom first frame** - Replace the opening frame with any image
+- **Flexible scaling** - Scale to video size or image size
+- **Frame rate control** - Adjust output frame rate
+- **Drag & drop** - Easy file upload interface
+- **No server required** - All processing happens locally
 
-## React Compiler
+## Getting Started
 
-The React Compiler is enabled on this template. See [this documentation](https://react.dev/learn/react-compiler) for more information.
+### Prerequisites
 
-Note: This will impact Vite dev & build performances.
+- Node.js (v18 or higher)
+- npm or yarn
 
-## Expanding the ESLint configuration
+### Installation
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+```bash
+# Clone the repository
+git clone https://github.com/yourusername/rickroll-disguiser.git
+cd rickroll-disguiser
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+# Install dependencies
+npm install
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+# Start the development server
+npm run dev
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+Visit `http://localhost:5173` in your browser to use the app.
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+## How to Use
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+1. Upload a video file (the one you want to disguise)
+2. Upload an image file (what people will see as the thumbnail/first frame)
+3. Configure settings:
+   - **Scale To**: Choose whether to scale to video or image dimensions
+   - **Frame Rate**: Set the output video frame rate
+4. Click "Process" and wait for the magic to happen
+5. Download your disguised video!
+
+## 🛠️ Tech Stack
+
+- **React** - UI framework
+- **TypeScript** - Type safety
+- **Vite** - Build tool and dev server
+- **Tailwind CSS** - Styling
+- **FFmpeg.wasm** - Video processing in the browser
+- **react-dropzone** - File upload handling
+
+## Build
+
+```bash
+npm run build
 ```
+
+The built files will be in the `dist` directory.
+
+## License
+
+This project is open source and available under the MIT License.
