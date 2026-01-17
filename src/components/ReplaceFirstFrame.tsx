@@ -25,18 +25,32 @@ const ReplaceFirstFrame = () => {
         const ffmpeg = ffmpegRef.current;
         const load = async () => {
             try {
+                console.log("Starting FFmpeg load...");
+                console.log("FFmpeg loaded status:", ffmpeg.loaded);
                 if (!ffmpeg.loaded) {
                     const baseURL = 'https://unpkg.com/@ffmpeg/core-mt@0.12.6/dist/esm'
+                    console.log("Fetching FFmpeg core files from:", baseURL);
+                    
+                    const coreURL = await toBlobURL(`${baseURL}/ffmpeg-core.js`, 'text/javascript');
+                    console.log("Core URL created");
+                    const wasmURL = await toBlobURL(`${baseURL}/ffmpeg-core.wasm`, 'application/wasm');
+                    console.log("WASM URL created");
+                    const workerURL = await toBlobURL(`${baseURL}/ffmpeg-core.worker.js`, 'text/javascript');
+                    console.log("Worker URL created");
+                    
+                    console.log("Calling ffmpeg.load()...");
                     await ffmpeg.load({
-                        coreURL: await toBlobURL(`${baseURL}/ffmpeg-core.js`, 'text/javascript'),
-                        wasmURL: await toBlobURL(`${baseURL}/ffmpeg-core.wasm`, 'application/wasm'),
-                        workerURL: await toBlobURL(`${baseURL}/ffmpeg-core.worker.js`, 'text/javascript'),
+                        coreURL,
+                        wasmURL,
+                        workerURL,
                     });
+                    console.log("ffmpeg.load() completed");
                     setFfmpegLoaded(true);
                     console.log("FFmpeg loaded");
                 }
             } catch (error) {
                 console.error("FFmpeg loading failed:", error);
+                console.error("Error details:", error instanceof Error ? error.message : String(error));
             }
         }
         load();
