@@ -1,17 +1,22 @@
 import { useState, useEffect, useRef, useMemo } from "react"
 import Dropzone from 'react-dropzone'
-import { FFmpeg } from "@ffmpeg/ffmpeg";
+import { FFmpeg, type FileData } from "@ffmpeg/ffmpeg";
 import { toBlobURL } from '@ffmpeg/util';
 import processReplacement from "../utils/processReplacement";
 import type { Options } from '../utils/interfaces';
 import Settings from "./Settings";
+import { convertToMov, convertToMkv } from "../utils/convert";
 
 const ReplaceFirstFrame = () => {
     const [videoFile, setVideoFile] = useState<File | null>(null)
     const [imageFile, setImageFile] = useState<File | null>(null)
+    const [processedFile, setProcessedFile] = useState<FileData | null>(null);
+    const [processedFileSize, setProcessedFileSize] = useState<number | null>(null);
     const [processedUrl, setProcessedUrl] = useState<string>('');
     const [ffmpegLoaded, setFfmpegLoaded] = useState<boolean>(false);
-    const [options, setOptions] = useState<Options>({ scaleTo: 1, framerate: 30, videoLenght: 10});
+    const [options, setOptions] = useState<Options>({ scaleTo: 1, framerate: 30, videoLenght: 10, fileName: "totally-not-a-rickroll"});
+    const [movLink, setMovLink] = useState<string | null>(null);
+    const [mkvLink, setMkvLink] = useState<string | null>(null);
 
     const ffmpegRef = useRef(new FFmpeg());
     useEffect(() => {
@@ -49,12 +54,30 @@ const ReplaceFirstFrame = () => {
     const process = async () => {
         if (videoFile && imageFile) {
             try {
-                const url = await processReplacement(ffmpegRef.current, videoFile, imageFile, options, processedUrl) ?? '';
+                const data = await processReplacement(ffmpegRef.current, videoFile, imageFile, options) ?? '';
+                setProcessedFile(data);
+                URL.revokeObjectURL(processedUrl ?? "");
+                const url = URL.createObjectURL(
+                    new Blob([new Uint8Array(data as Uint8Array)], { type: "video/mp4" })
+                );
                 setProcessedUrl(url);
+                setProcessedFileSize(data.length)
             } catch (error) {
                 console.error("Error processing:", error);
             }
         }
+    }
+
+    const downloadFile = (data: FileData, extension: string, setLink: React.Dispatch<React.SetStateAction<string | null>>) => {
+        const url = URL.createObjectURL(
+            new Blob([new Uint8Array(data as Uint8Array)], { type: "video/mkv" })
+        );
+        setLink(url);
+
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = options.fileName + extension;
+        a.click();
     }
 
     return (
@@ -92,8 +115,17 @@ const ReplaceFirstFrame = () => {
                 {ffmpegLoaded ? 'Process' : 'Loading FFmpeg...'}
             </button>
             <Settings options={options} setOptions={setOptions}></Settings>
-            {processedUrl ? (
-                <video src={processedUrl ?? ""} className="mt-6 mx-auto my-4" controls></video>
+            {processedFile && processedUrl ? (
+                <div className="flex my-6 bg-slate-700/20 border border-slate-600/50 rounded-lg">
+                    <div className="w-3/4">
+                        <video src={processedUrl ?? ""} controls></video>
+                    </div>
+                    <div className="w-1/4 p-6 flex flex-col gap-4">
+                        <a href={processedUrl} download={options.fileName + ".mp4"}><button className="w-full text-white">Download MP4 ({((processedFileSize ?? 0) / 1024 / 1024).toFixed(1)} MB)</button></a>
+                        {movLink ? (<a href={movLink} download={options.fileName + ".mov"}><button className="w-full text-white">Download MOV</button></a>) : (<button className="w-full" onClick={async () => {await convertToMov(ffmpegRef.current, processedFile); downloadFile(movLink!, ".mov", setMovLink)}}>Convert to MOV</button>)}
+                        {mkvLink ? (<a href={mkvLink} download={options.fileName + ".mkv"}><button className="w-full text-white">Download MKV</button></a>) : (<button className="w-full" onClick={async () => {await convertToMkv(ffmpegRef.current, processedFile); downloadFile(mkvLink!, ".mkv", setMkvLink)}}>Convert to MKV</button>)}
+                    </div>
+                </div>
             ): ""}
         </div>
     )

@@ -1,12 +1,11 @@
 import { fetchFile } from "@ffmpeg/util";
-import type { FFmpeg } from "@ffmpeg/ffmpeg";
+import type { FFmpeg, FileData } from "@ffmpeg/ffmpeg";
 import type { Options } from "../utils/interfaces";
 
-const processReplacement = (ffmpeg: FFmpeg, videoFile: File, imageFile: File, options: Options, outputUrl?: string) => { 
-    const process = async (videoFile: File, imageFile: File) => {
+const processReplacement = (ffmpeg: FFmpeg, videoFile: File, imageFile: File, options: Options) => { 
+    const process = async (videoFile: File, imageFile: File): Promise<FileData> => {
         // Deleting file from previous processing and revoking its URL
         ffmpeg.deleteFile?.("output.mp4");
-        URL.revokeObjectURL(outputUrl ?? "");
 
         // Writing input photo and video into files
         await ffmpeg.writeFile("input.mp4", await fetchFile(videoFile));
@@ -79,11 +78,8 @@ const processReplacement = (ffmpeg: FFmpeg, videoFile: File, imageFile: File, op
 
         // Creating URL from result video
         const data = await ffmpeg.readFile("output.mp4");
-        const url = URL.createObjectURL(
-            new Blob([new Uint8Array(data as Uint8Array)], { type: "video/mp4" })
-        );
 
-        return url;
+        return data;
     }
 
     if (videoFile && imageFile) {

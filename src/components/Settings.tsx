@@ -41,6 +41,15 @@ const Settings = ({ options, setOptions }: { options: Options, setOptions: React
                         className="px-4 h-10 w-24 bg-slate-700 border border-slate-500 rounded-md hover:bg-slate-600 focus:outline-none focus:ring-2 focus:ring-slate-400 transition-all"
                     />
                 </div>
+                <div className="flex flex-col gap-2">
+                    <label className="text-sm font-medium text-slate-300">File name:</label>
+                    <input 
+                        type="text" 
+                        value={options.fileName} 
+                        onChange={e => setOption("fileName", e.currentTarget.value)}
+                        className="px-4 h-10 w-80 bg-slate-700 border border-slate-500 rounded-md hover:bg-slate-600 focus:outline-none focus:ring-2 focus:ring-slate-400 transition-all"
+                    />
+                </div>
             </div>
         </div>
     )
