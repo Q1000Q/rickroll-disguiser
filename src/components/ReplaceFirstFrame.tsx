@@ -15,7 +15,9 @@ const ReplaceFirstFrame = () => {
     const [processedUrl, setProcessedUrl] = useState<string>('');
     const [ffmpegLoaded, setFfmpegLoaded] = useState<boolean>(false);
     const [options, setOptions] = useState<Options>({ scaleTo: 1, framerate: 30, videoLenght: 10, fileName: "totally-not-a-rickroll"});
+    const [movFile, setMovFile] = useState<FileData | null>(null);
     const [movLink, setMovLink] = useState<string | null>(null);
+    const [mkvFile, setMkvFile] = useState<FileData | null>(null);
     const [mkvLink, setMkvLink] = useState<string | null>(null);
 
     const ffmpegRef = useRef(new FFmpeg());
@@ -70,7 +72,7 @@ const ReplaceFirstFrame = () => {
 
     const downloadFile = (data: FileData, extension: string, setLink: React.Dispatch<React.SetStateAction<string | null>>) => {
         const url = URL.createObjectURL(
-            new Blob([new Uint8Array(data as Uint8Array)], { type: "video/mkv" })
+            new Blob([new Uint8Array(data as Uint8Array)], { type: `video/${extension.slice(1)}` })
         );
         setLink(url);
 
@@ -122,8 +124,8 @@ const ReplaceFirstFrame = () => {
                     </div>
                     <div className="w-1/4 p-6 flex flex-col gap-4">
                         <a href={processedUrl} download={options.fileName + ".mp4"}><button className="w-full text-white">Download MP4 ({((processedFileSize ?? 0) / 1024 / 1024).toFixed(1)} MB)</button></a>
-                        {movLink ? (<a href={movLink} download={options.fileName + ".mov"}><button className="w-full text-white">Download MOV</button></a>) : (<button className="w-full" onClick={async () => {await convertToMov(ffmpegRef.current, processedFile); downloadFile(movLink!, ".mov", setMovLink)}}>Convert to MOV</button>)}
-                        {mkvLink ? (<a href={mkvLink} download={options.fileName + ".mkv"}><button className="w-full text-white">Download MKV</button></a>) : (<button className="w-full" onClick={async () => {await convertToMkv(ffmpegRef.current, processedFile); downloadFile(mkvLink!, ".mkv", setMkvLink)}}>Convert to MKV</button>)}
+                        {movLink ? (<a href={movLink} download={options.fileName + ".mov"}><button className="w-full text-white">Download MOV ({((movFile?.length ?? 0) / 1024 / 1024).toFixed(1)} MB)</button></a>) : (<button className="w-full" onClick={async () => {const file = await convertToMov(ffmpegRef.current, processedFile); setMovFile(file); downloadFile(file, ".mov", setMovLink)}}>Convert to MOV</button>)}
+                        {mkvLink ? (<a href={mkvLink} download={options.fileName + ".mkv"}><button className="w-full text-white">Download MKV ({((mkvFile?.length ?? 0) / 1024 / 1024).toFixed(1)} MB)</button></a>) : (<button className="w-full" onClick={async () => {const file = await convertToMkv(ffmpegRef.current, processedFile); setMkvFile(file); downloadFile(file, ".mkv", setMkvLink)}}>Convert to MKV</button>)}
                     </div>
                 </div>
             ): ""}
