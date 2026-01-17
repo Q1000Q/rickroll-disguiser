@@ -61,6 +61,12 @@ npm run build
 
 The built files will be in the `dist` directory.
 
+You may need to add this CORS headers to your server for ffmpeg to load:
+```
+'Cross-Origin-Opener-Policy': 'same-origin',
+'Cross-Origin-Embedder-Policy': 'require-corp'
+```
+
 ## License
 
 This project is open source and available under the MIT License.
