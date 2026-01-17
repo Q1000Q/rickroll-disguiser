@@ -27,12 +27,13 @@ const ReplaceFirstFrame = () => {
             try {
                 console.log("Starting FFmpeg load...");
                 if (!ffmpeg.loaded) {
-                    const baseURL = 'https://unpkg.com/@ffmpeg/core@0.12.6/dist/umd'
+                    const baseURL = 'https://cdn.jsdelivr.net/npm/@ffmpeg/core-mt@0.12.6/dist/esm'
                     console.log("Fetching FFmpeg core files from:", baseURL);
                     
                     await ffmpeg.load({
                         coreURL: await toBlobURL(`${baseURL}/ffmpeg-core.js`, 'text/javascript'),
                         wasmURL: await toBlobURL(`${baseURL}/ffmpeg-core.wasm`, 'application/wasm'),
+                        workerURL: await toBlobURL(`${baseURL}/ffmpeg-core.worker.js`, 'text/javascript'),
                     });
                     console.log("ffmpeg.load() completed");
                     setFfmpegLoaded(true);
