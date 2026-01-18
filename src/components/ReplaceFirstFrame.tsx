@@ -1,7 +1,6 @@
 import { useState, useEffect, useRef, useMemo } from "react"
 import Dropzone from 'react-dropzone'
 import { FFmpeg, type FileData } from "@ffmpeg/ffmpeg";
-import { toBlobURL } from '@ffmpeg/util';
 import processReplacement from "../utils/processReplacement";
 import type { Options } from '../utils/interfaces';
 import Settings from "./Settings";
@@ -27,14 +26,7 @@ const ReplaceFirstFrame = () => {
             try {
                 console.log("Starting FFmpeg load...");
                 if (!ffmpeg.loaded) {
-                    const baseURL = 'https://cdn.jsdelivr.net/npm/@ffmpeg/core-mt@0.12.6/dist/esm'
-                    console.log("Fetching FFmpeg core files from:", baseURL);
-                    
-                    await ffmpeg.load({
-                        coreURL: await toBlobURL(`${baseURL}/ffmpeg-core.js`, 'text/javascript'),
-                        wasmURL: await toBlobURL(`${baseURL}/ffmpeg-core.wasm`, 'application/wasm'),
-                        workerURL: await toBlobURL(`${baseURL}/ffmpeg-core.worker.js`, 'text/javascript'),
-                    });
+                    await ffmpeg.load();
                     console.log("ffmpeg.load() completed");
                     setFfmpegLoaded(true);
                     console.log("FFmpeg loaded successfully");
