@@ -15,6 +15,7 @@ const ReplaceFirstFrame = () => {
     const [ffmpegLoaded, setFfmpegLoaded] = useState<boolean>(false);
     const [options, setOptions] = useState<Options>({ scaleTo: 1, framerate: 10, videoLenght: 5, fileName: "totally-not-a-rickroll"});
     const [isProcessing, setIsProcessing] = useState<boolean>(false);
+    const [showSlowMessage, setShowSlowMessage] = useState<boolean>(false);
 
     const ffmpegRef = useRef(new FFmpeg());
     useEffect(() => {
@@ -53,6 +54,12 @@ const ReplaceFirstFrame = () => {
     const process = async () => {
         if (videoFile && imageFile) {
             setIsProcessing(true);
+            setShowSlowMessage(false);
+            
+            const slowMessageTimer = setTimeout(() => {
+                setShowSlowMessage(true);
+            }, 30000);
+            
             try {
                 const data = await processReplacement(ffmpegRef.current, videoFile, imageFile, options) ?? '';
                 setProcessedFile(data);
@@ -65,7 +72,9 @@ const ReplaceFirstFrame = () => {
             } catch (error) {
                 console.error("Error processing:", error);
             } finally {
+                clearTimeout(slowMessageTimer);
                 setIsProcessing(false);
+                setShowSlowMessage(false);
             }
         }
     }
@@ -112,6 +121,11 @@ const ReplaceFirstFrame = () => {
                     </span>
                 ) : (ffmpegLoaded ? 'Process' : 'Loading FFmpeg...')}
             </button>
+            {showSlowMessage && (
+                <div className="mt-4 text-yellow-400 text-sm text-center">
+                    FFmpeg is still running in your browser. This may take a while depending on quality settings and device performance.
+                </div>
+            )}
             <Settings options={options} setOptions={setOptions}></Settings>
             {processedFile && processedUrl ? (
                 <div className="flex my-6 bg-slate-700/20 border border-slate-600/50 rounded-lg">
