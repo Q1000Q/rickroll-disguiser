@@ -13,7 +13,7 @@ const ReplaceFirstFrame = () => {
     const [processedFileSize, setProcessedFileSize] = useState<number | null>(null);
     const [processedUrl, setProcessedUrl] = useState<string>('');
     const [ffmpegLoaded, setFfmpegLoaded] = useState<boolean>(false);
-    const [options, setOptions] = useState<Options>({ scaleTo: 1, framerate: 10, videoLenght: 5, fileName: "totally-not-a-rickroll"});
+    const [options, setOptions] = useState<Options>({ scaleTo: 0, framerate: 10, videoLenght: 5, fileName: "totally-not-a-rickroll"});
     const [isProcessing, setIsProcessing] = useState<boolean>(false);
     const [showSlowMessage, setShowSlowMessage] = useState<boolean>(false);
     const [processingProgress, setProcessingProgress] = useState<number>(0);
