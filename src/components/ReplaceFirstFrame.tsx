@@ -4,7 +4,7 @@ import { FFmpeg, type FileData } from "@ffmpeg/ffmpeg";
 import processReplacement from "../utils/processReplacement";
 import type { Options } from '../utils/interfaces';
 import Settings from "./Settings";
-import { convertToMov, convertToMkv } from "../utils/convert";
+import ConvertButton from "./ConvertButton";
 
 const ReplaceFirstFrame = () => {
     const [videoFile, setVideoFile] = useState<File | null>(null)
@@ -14,10 +14,7 @@ const ReplaceFirstFrame = () => {
     const [processedUrl, setProcessedUrl] = useState<string>('');
     const [ffmpegLoaded, setFfmpegLoaded] = useState<boolean>(false);
     const [options, setOptions] = useState<Options>({ scaleTo: 1, framerate: 30, videoLenght: 10, fileName: "totally-not-a-rickroll"});
-    const [movFile, setMovFile] = useState<FileData | null>(null);
-    const [movLink, setMovLink] = useState<string | null>(null);
-    const [mkvFile, setMkvFile] = useState<FileData | null>(null);
-    const [mkvLink, setMkvLink] = useState<string | null>(null);
+    const [isProcessing, setIsProcessing] = useState<boolean>(false);
 
     const ffmpegRef = useRef(new FFmpeg());
     useEffect(() => {
@@ -55,6 +52,7 @@ const ReplaceFirstFrame = () => {
 
     const process = async () => {
         if (videoFile && imageFile) {
+            setIsProcessing(true);
             try {
                 const data = await processReplacement(ffmpegRef.current, videoFile, imageFile, options) ?? '';
                 setProcessedFile(data);
@@ -66,20 +64,10 @@ const ReplaceFirstFrame = () => {
                 setProcessedFileSize(data.length)
             } catch (error) {
                 console.error("Error processing:", error);
+            } finally {
+                setIsProcessing(false);
             }
         }
-    }
-
-    const downloadFile = (data: FileData, extension: string, setLink: React.Dispatch<React.SetStateAction<string | null>>) => {
-        const url = URL.createObjectURL(
-            new Blob([new Uint8Array(data as Uint8Array)], { type: `video/${extension.slice(1)}` })
-        );
-        setLink(url);
-
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = options.fileName + extension;
-        a.click();
     }
 
     return (
@@ -113,8 +101,16 @@ const ReplaceFirstFrame = () => {
                     )}
                 </Dropzone>
             </div>
-            <button className="px-24 h-12 w-full mt-8" onClick={process} disabled={!ffmpegLoaded || !videoFile || !imageFile}>
-                {ffmpegLoaded ? 'Process' : 'Loading FFmpeg...'}
+            <button className="px-24 h-12 w-full mt-8" onClick={process} disabled={!ffmpegLoaded || !videoFile || !imageFile || isProcessing}>
+                {isProcessing ? (
+                    <span className="flex items-center justify-center gap-2">
+                        <svg className="animate-spin h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        Processing...
+                    </span>
+                ) : (ffmpegLoaded ? 'Process' : 'Loading FFmpeg...')}
             </button>
             <Settings options={options} setOptions={setOptions}></Settings>
             {processedFile && processedUrl ? (
@@ -124,8 +120,8 @@ const ReplaceFirstFrame = () => {
                     </div>
                     <div className="w-1/4 p-6 flex flex-col gap-4">
                         <a href={processedUrl} download={options.fileName + ".mp4"}><button className="w-full text-white">Download MP4 ({((processedFileSize ?? 0) / 1024 / 1024).toFixed(1)} MB)</button></a>
-                        {movLink ? (<a href={movLink} download={options.fileName + ".mov"}><button className="w-full text-white">Download MOV ({((movFile?.length ?? 0) / 1024 / 1024).toFixed(1)} MB)</button></a>) : (<button className="w-full" onClick={async () => {const file = await convertToMov(ffmpegRef.current, processedFile); setMovFile(file); downloadFile(file, ".mov", setMovLink)}}>Convert to MOV</button>)}
-                        {mkvLink ? (<a href={mkvLink} download={options.fileName + ".mkv"}><button className="w-full text-white">Download MKV ({((mkvFile?.length ?? 0) / 1024 / 1024).toFixed(1)} MB)</button></a>) : (<button className="w-full" onClick={async () => {const file = await convertToMkv(ffmpegRef.current, processedFile); setMkvFile(file); downloadFile(file, ".mkv", setMkvLink)}}>Convert to MKV</button>)}
+                        <ConvertButton extension="mov" ffmpeg={ffmpegRef.current} fileName={options.fileName} processedFile={processedFile}></ConvertButton>
+                        <ConvertButton extension="mkv" ffmpeg={ffmpegRef.current} fileName={options.fileName} processedFile={processedFile}></ConvertButton>
                     </div>
                 </div>
             ): ""}
