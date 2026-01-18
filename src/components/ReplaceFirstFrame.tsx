@@ -16,6 +16,7 @@ const ReplaceFirstFrame = () => {
     const [options, setOptions] = useState<Options>({ scaleTo: 1, framerate: 10, videoLenght: 5, fileName: "totally-not-a-rickroll"});
     const [isProcessing, setIsProcessing] = useState<boolean>(false);
     const [showSlowMessage, setShowSlowMessage] = useState<boolean>(false);
+    const [processingProgress, setProcessingProgress] = useState<number>(0);
 
     const ffmpegRef = useRef(new FFmpeg());
     useEffect(() => {
@@ -55,10 +56,28 @@ const ReplaceFirstFrame = () => {
         if (videoFile && imageFile) {
             setIsProcessing(true);
             setShowSlowMessage(false);
+            setProcessingProgress(0);
             
             const slowMessageTimer = setTimeout(() => {
                 setShowSlowMessage(true);
             }, 30000);
+            
+            const progressInterval = setInterval(() => {
+                setProcessingProgress(prev => {
+                    if (prev >= 95) return prev;
+                    
+                    const randomJump = Math.random() * 3.5 + 0.5;
+                    
+                    if (Math.random() < 0.15) {
+                        return prev;
+                    }
+                    
+                    const isBigJump = Math.random() < 0.08;
+                    const increment = (isBigJump ? randomJump * 2.5 : randomJump) / (options.framerate * options.videoLenght * 0.03);
+                    
+                    return Math.min(prev + increment, 95);
+                });
+            }, Math.random() * 150 + 100);
             
             try {
                 const data = await processReplacement(ffmpegRef.current, videoFile, imageFile, options) ?? '';
@@ -69,12 +88,15 @@ const ReplaceFirstFrame = () => {
                 );
                 setProcessedUrl(url);
                 setProcessedFileSize(data.length)
+                setProcessingProgress(100);
             } catch (error) {
                 console.error("Error processing:", error);
             } finally {
                 clearTimeout(slowMessageTimer);
+                clearInterval(progressInterval);
                 setIsProcessing(false);
                 setShowSlowMessage(false);
+                setTimeout(() => setProcessingProgress(0), 500);
             }
         }
     }
@@ -110,16 +132,20 @@ const ReplaceFirstFrame = () => {
                     )}
                 </Dropzone>
             </div>
-            <button className="px-24 h-12 w-full mt-8" onClick={process} disabled={!ffmpegLoaded || !videoFile || !imageFile || isProcessing}>
-                {isProcessing ? (
-                    <span className="flex items-center justify-center gap-2">
-                        <svg className="animate-spin h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                        </svg>
-                        Processing...
-                    </span>
-                ) : (ffmpegLoaded ? 'Process' : 'Loading FFmpeg...')}
+            <button className="px-24 h-12 w-full mt-8 relative overflow-hidden" onClick={process} disabled={!ffmpegLoaded || !videoFile || !imageFile || isProcessing}>
+                {isProcessing && (
+                    <div 
+                        className="absolute inset-0 bg-blue-500/30 transition-all duration-200 ease-linear"
+                        style={{ width: `${processingProgress}%` }}
+                    />
+                )}
+                <span className="relative z-10">
+                    {isProcessing ? (
+                        <span className="flex items-center justify-center gap-2">
+                            Processing...
+                        </span>
+                    ) : (ffmpegLoaded ? 'Process' : 'Loading FFmpeg...')}
+                </span>
             </button>
             {showSlowMessage && (
                 <div className="mt-4 text-yellow-400 text-sm text-center">
